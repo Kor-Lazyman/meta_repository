@@ -3,14 +3,14 @@
 graph TD
 
 %% Task Sampling and Inner Loop
-A[Task τᵢ 샘플링] --> B[Inner Loop 시작]
+A[Task τᵢ Sampling] --> B[Inner Loop Strated]
 
-B --> C1[Inner Policy π_ϕ 학습 (PPO)]
-B --> C2[Inner Critic V_ϕ 학습 (TD, PPO 등)]
+B --> C1[Inner Policy π_ϕ Learning (PPO)]
+B --> C2[Inner Critic V_ϕ Learning (TD, PPO ,etc)]
 
 %% Outer Loop Begins
-C1 --> D1[Outer Policy π_θ 업데이트]
-C2 --> D2[Outer Critic V_θ 업데이트]
+C1 --> D1[Outer Policy π_θ Update]
+C2 --> D2[Outer Critic V_θ Update]
 
 %% Value Matching for Critic
 D2 --> E1[Loss_V = MSE(V_θ(s), V_ϕ(s))]
