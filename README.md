@@ -3,27 +3,32 @@
 graph TD
 
 %% Task Sampling and Inner Loop
-A[Task τᵢ Sampling] --> B[Inner Loop Strated]
+A[Sample Task τᵢ] --> B[Start Inner Loop]
 
-B --> C1[Inner Policy π_ϕ Learning (PPO)]
-B --> C2[Inner Critic V_ϕ Learning (TD, PPO ,etc)]
+B --> C1[Train Inner Policy (pi_phi) with PPO]
+B --> C2[Train Inner Critic (V_phi)]
 
 %% Outer Loop Begins
-C1 --> D1[Outer Policy π_θ Update]
-C2 --> D2[Outer Critic V_θ Update]
+C1 --> D1[Outer Policy (pi_theta) Update]
+C2 --> D2[Outer Critic (V_theta) Update]
 
 %% Value Matching for Critic
-D2 --> E1[Loss_V = MSE(V_θ(s), V_ϕ(s))]
+D2 --> E1[Value Loss = MSE(V_theta(s), V_phi(s))]
 
 %% Policy Matching via Action Probs
-D1 --> E2[Loss_π = PPO Loss with inner action_probs]
+D1 --> E2[Policy Loss = PPO using action_probs from Inner Loop]
 
 %% Final Parameter Update
-E1 --> F[θ ← θ - α∇_θ Loss_V]
-E2 --> G[θ ← θ - β∇_θ Loss_π]
+E1 --> F[Update theta with ∇Loss_V]
+E2 --> G[Update theta with ∇Loss_Policy]
 
 %% Notes
 subgraph Legend
+    note1[Inner Loop = Task-specific Adaptation]
+    note2[Outer Loop = Meta-generalization]
+end
+```
+
     note1[Inner → Task-specific adaptation]
     note2[Outer → Generalization across tasks]
 end
