@@ -1,17 +1,25 @@
 ```mermaid
 flowchart TD
 
-Start([Start]) --> SampleTask[Sample Task tau_i]
-SampleTask --> InnerLoop[Run Inner Loop]
-InnerLoop --> TrainPolicy[Train Inner Policy pi_phi with PPO]
-InnerLoop --> TrainValue[Train Inner Critic V_phi]
+%% Task-level Meta-Learning Loop
+Start([Start Meta-Learning]) --> SampleTasks[Sample Batch of Tasks {tau_1, ..., tau_N}]
 
-TrainPolicy --> ComputePolicyLoss[Compute Outer Policy Loss using action_probs from Inner]
-TrainValue --> ComputeValueLoss[Compute Outer Value Loss: MSE V_theta, V_phi]
+%% Inner Loop
+SampleTasks --> InnerLoop[For each task tau_i: Run Inner Loop]
+InnerLoop --> InnerPolicy[Train Inner Policy "(pi_phi_i)" with PPO]
+InnerLoop --> InnerValue[Train Inner Critic "(V_phi_i)"]
 
-ComputePolicyLoss --> UpdatePolicy[Update pi_theta using grad_Loss_Policy]
-ComputeValueLoss --> UpdateValue[Update V_theta using grad_Loss_Value]
+%% Outer Loop
+InnerPolicy --> PolicyLoss[Compute Outer Policy Loss using action_probs from Inner]
+InnerValue --> ValueLoss[Compute Outer Value Loss: MSE"(V_theta(s), V_phi_i(s))"]
 
-UpdatePolicy --> End([End])
-UpdateValue --> End
+PolicyLoss --> UpdatePolicy[Update pi_theta: grad_Loss_Policy]
+ValueLoss --> UpdateValue[Update V_theta: grad_Loss_Value]
+
+UpdatePolicy --> Merge[Aggregate gradients across tasks]
+UpdateValue --> Merge
+
+Merge --> UpdateParams[Apply meta-update to theta]
+
+UpdateParams --> End([Next Meta-Iteration])
 ```
