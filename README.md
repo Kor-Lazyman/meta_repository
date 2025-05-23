@@ -1,27 +1,30 @@
 # meta_repository
-flowchart TD
-    Start([시작: Task 배정])
+```mermaid
+graph TD
 
-    subgraph Inner Loop [Inner Policy (φ): Task-specific Adaptation]
-        A1[환경과 상호작용\n→ (s_t, a_t, r_t) 수집]
-        A2[inner policy log_probs_old 계산]
-        A3[inner value function → V^φ(s_t)]
-        A4[advantage 계산: A^φ = R - V^φ(s_t)]
-        A5[inner memory 저장]
-    end
+%% Task Sampling and Inner Loop
+A[Task τᵢ 샘플링] --> B[Inner Loop 시작]
 
-    subgraph Outer Loop [Outer Policy (θ): Meta-Update]
-        B1[inner memory에서\n(s_t, a_t, A^φ) 가져오기]
-        B2[outer policy로 log_probs_new 계산]
-        B3[outer value function V^θ(s_t) 계산]
-        B4[ratio = exp(log_probs_new - log_probs_old)]
-        B5[policy loss 계산 (PPO surrogate)]
-        B6[value loss = MSE(V^θ, reward + γV^φ(s'))]
-        B7[총 loss = policy + value + entropy]
-        B8[outer policy θ 업데이트]
-    end
+B --> C1[Inner Policy π_ϕ 학습 (PPO)]
+B --> C2[Inner Critic V_ϕ 학습 (TD, PPO 등)]
 
-    End([다음 Task로 이동])
+%% Outer Loop Begins
+C1 --> D1[Outer Policy π_θ 업데이트]
+C2 --> D2[Outer Critic V_θ 업데이트]
 
-    Start --> A1 --> A2 --> A3 --> A4 --> A5 --> B1
-    B1 --> B2 --> B3 --> B4 --> B5 --> B6 --> B7 --> B8 --> End
+%% Value Matching for Critic
+D2 --> E1[Loss_V = MSE(V_θ(s), V_ϕ(s))]
+
+%% Policy Matching via Action Probs
+D1 --> E2[Loss_π = PPO Loss with inner action_probs]
+
+%% Final Parameter Update
+E1 --> F[θ ← θ - α∇_θ Loss_V]
+E2 --> G[θ ← θ - β∇_θ Loss_π]
+
+%% Notes
+subgraph Legend
+    note1[Inner → Task-specific adaptation]
+    note2[Outer → Generalization across tasks]
+end
+```
