@@ -2,7 +2,7 @@
 flowchart TD
 
 %% Task-level Meta-Learning Loop
-Start([Start Meta-Learning]) --> SampleTasks[Sample Batch of Tasks tau_1, ..., tau_N]
+Start([Start Meta-Learning]) --> SampleTasks"[Sample Batch of Tasks tau_1, ..., tau_N]"
 
 %% Inner Loop
 SampleTasks --> InnerLoop[For each task tau_i: Run Inner Loop]
