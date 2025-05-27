@@ -14,8 +14,8 @@ GAE_LAMBDA = 0.95
 ENT_COEF = 0.0
 VF_COEF = 0.5
 MAX_GRAD_NORM = 0.5
-#DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-DEVICE = torch.device("cpu")
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+#DEVICE = torch.device("cpu")
 class ActorCritic(nn.Module):
     """
     Actor-Critic model for PPO with MultiDiscrete action space.
