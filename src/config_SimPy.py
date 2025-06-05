@@ -52,8 +52,8 @@ I = {0: {"ID": 0, "TYPE": "Product",      "NAME": "PRODUCT",
          "LOT_SIZE_ORDER": 0}}
 P = {0: {"ID": 0, "PRODUCTION_RATE": 2, "INPUT_TYPE_LIST": [I[1]], "QNTY_FOR_INPUT_ITEM": [
     1], "OUTPUT": I[0], "PROCESS_COST": 1, "PROCESS_STOP_COST": 2}}
-'''
-'''
+
+
 # Assembly Process 2
 I = {0: {"ID": 0, "TYPE": "Product",      "NAME": "PROD",
          "CUST_ORDER_CYCLE": 7,
@@ -167,30 +167,12 @@ DAILY_CHANGE = 0  # 0: False / 1: True
 INTRANSIT = 1  # 0: False / 1: True
 
 
-def DEFINE_FOLDER(folder_name):
-    if os.path.exists(folder_name):
-        file_list = os.listdir(folder_name)
-        folder_name = os.path.join(folder_name, f"Train_{len(file_list)+1}")
-    else:
-        folder_name = os.path.join(folder_name, "Train_1")
-    return folder_name
-
-
-def save_path(path):
-    import shutil
-
-    if os.path.exists(path):
-        shutil.rmtree(path)
-
-    # Create a new folder
-    os.makedirs(path)
-    return path
-
 # Create demand
 
 
 def DEMAND_QTY_FUNC(scenario):
     # Uniform distribution
+
     if scenario["Dist_Type"] == "UNIFORM":
         return random.randint(scenario['min'], scenario["max"])
     # Gaussian distribution
@@ -204,8 +186,8 @@ def DEMAND_QTY_FUNC(scenario):
         else:
             return demand
 
-
 def SUP_LEAD_TIME_FUNC(lead_time_dict):
+
     if lead_time_dict["Dist_Type"] == "UNIFORM":
         # Lead time의 최대 값은 Action Space의 최대 값과 곱하였을 때 INVEN_LEVEL_MAX의 2배를 넘지 못하게 설정 해야 함 (INTRANSIT이 OVER되는 현상을 방지 하기 위해서)
         # SUP_LEAD_TIME must be an integer
@@ -237,7 +219,6 @@ def validation_input(day):
 current_dir = os.path.dirname(__file__)
 parent_dir = os.path.dirname(current_dir)
 result_Graph_folder = os.path.join(parent_dir, "result_Graph")
-GRAPH_FOLDER = save_path(result_Graph_folder)
 
 # State space
 # if this is not 0, the length of state space of demand quantity is not identical to INVEN_LEVEL_MAX

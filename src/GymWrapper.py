@@ -15,7 +15,6 @@ from torch.utils.tensorboard import SummaryWriter
 class GymInterface(gym.Env):
     def __init__(self):
         self.outer_end = False
-        self.writer = SummaryWriter(log_dir=TENSORFLOW_LOGS)
         #print("Tensorboard Directory: :", TENSORFLOW_LOGS)
         super(GymInterface, self).__init__()
 
@@ -114,6 +113,8 @@ class GymInterface(gym.Env):
         env.update_daily_report(self.inventoryList)
 
         state_real = self.get_current_state()
+        STATE_DICT.clear()
+        DAILY_REPORTS.clear()
         return state_real
 
     def step(self, action):
@@ -144,7 +145,7 @@ class GymInterface(gym.Env):
         # Set the next state
         next_state = state_real
         # Calculate the total cost of the day
-        env.Cost.update_cost_log(self.inventoryList)
+        cost = env.Cost.update_cost_log(self.inventoryList)
         if PRINT_SIM:
             cost = dict(DAILY_COST_REPORT)
         # Cost Dict update
@@ -153,8 +154,7 @@ class GymInterface(gym.Env):
 
         env.Cost.clear_cost()
 
-        reward = -COST_LOG[-1]
-        REWARD_LOG.append(COST_LOG[-1])
+        reward = -cost
         self.total_reward += reward
         self.shortages += self.sales.num_shortages
         self.sales.num_shortages = 0
@@ -184,6 +184,7 @@ class GymInterface(gym.Env):
         # Check if the simulation is done
         done = self.simpy_env.now >= SIM_TIME * 24  # 예: SIM_TIME일 이후에 종료
         if done == True:
+            '''
             if DRL_TENSORBOARD or EXPERIMENT_ADAPTATION:
                 self.writer.add_scalar(
                     "reward", self.total_reward, global_step=self.cur_episode)
@@ -199,6 +200,7 @@ class GymInterface(gym.Env):
             if self.outer_end == True and self.scenario_batch_size == self.cur_inner_loop:
                 self.writer.add_scalar(
                     "inner_end/reward", self.total_reward, global_step=self.cur_episode)
+            '''
             self.total_reward_over_episode.append(self.total_reward)
             self.total_reward = 0
             self.cur_episode += 1
@@ -294,104 +296,9 @@ def evaluate_model(model, env, num_episodes):
         COST_HISTORY.append(env.cost_dict)
     if VISUALIAZTION.count(1) > 0:
         visualization.visualization(DAILY_REPORTS)
-    Visualize_invens(onhand_inventory, demand_qty, Mat_Order, all_rewards)
-    cal_cost_avg()
     # print("Order_Average:", test_order_mean)
     # Calculate mean reward across all episodes
     mean_reward = np.mean(all_rewards)
     std_reward = np.std(all_rewards)  # Calculate standard deviation of rewards
     return mean_reward, std_reward  # Return mean and std of rewards
 
-
-def cal_cost_avg():
-    # Temp_Dict
-    cost_avg = {
-        'Holding cost': 0,
-        'Process cost': 0,
-        'Delivery cost': 0,
-        'Order cost': 0,
-        'Shortage cost': 0
-    }
-    # Temp_List
-    total_avg = []
-
-    # Cal_cost_AVG
-    for x in range(N_EVAL_EPISODES):
-        for key in COST_HISTORY[x].keys():
-            cost_avg[key] += COST_HISTORY[x][key]
-        total_avg.append(sum(COST_HISTORY[x].values()))
-    for key in cost_avg.keys():
-        cost_avg[key] = cost_avg[key]/N_EVAL_EPISODES
-    # Visualize
-    if VIZ_COST_PIE:
-        plt.figure(figsize=(10, 5))
-        plt.pie(cost_avg.values(), explode=[
-                0.2 for x in range(5)], labels=cost_avg.keys(), autopct='%1.1f%%')
-        path = os.path.join(GRAPH_LOG, 'COST_PI.png')
-        plt.savefig(path)
-        plt.show()
-        plt.close()
-
-    if VIZ_COST_BOX:
-        plt.boxplot(total_avg)
-        path = os.path.join(GRAPH_LOG, 'COST_BOX.png')
-        plt.savefig(path)
-        plt.show()
-        plt.close()
-
-
-def Visualize_invens(inventory, demand_qty, Mat_Order, all_rewards):
-    best_reward = -99999999999999
-    best_index = 0
-    for x in range(N_EVAL_EPISODES):
-        if all_rewards[x] > best_reward:
-            best_reward = all_rewards[x]
-            best_index = x
-
-    avg_inven = [[0 for _ in range(SIM_TIME)] for _ in range(len(I))]
-    lable = []
-    for id in I.keys():
-        lable.append(I[id]["NAME"])
-
-    if VIZ_INVEN_PIE:
-        plt.figure(figsize=(10, 5))
-        for x in range(N_EVAL_EPISODES):
-            for y in range(len(I)):
-                for z in range(SIM_TIME):
-                    avg_inven[y][z] += inventory[x][y][z]
-
-        plt.pie([sum(avg_inven[x])/N_EVAL_EPISODES for x in range(len(I))],
-                explode=[0.2 for _ in range(len(I))], labels=lable, autopct='%1.1f%%')
-        path = os.path.join(GRAPH_LOG, 'INVEN_PI.png')
-        plt.savefig(path)
-        plt.show()
-        plt.close()
-
-    if VIZ_INVEN_LINE:
-        line_dict = {}
-        writer = SummaryWriter(log_dir=GRAPH_LOG)
-        plt.figure(figsize=(15, 5))
-        # Inven Line
-        for id in I.keys():
-            # Visualize the inventory levels of the best episode
-            plt.plot(inventory[best_index][id], label=lable[id])
-            line_dict[lable[id]] = inventory[best_index][id]
-
-        plt.plot(demand_qty[-SIM_TIME:], "y--", label="Demand_QTY")
-        line_dict[f"Demand_QTY"] = demand_qty[-SIM_TIME:]
-        # Order_Line
-        for key in Mat_Order.keys():
-            line_dict[f"ORDER {key}"] = Mat_Order[key][-SIM_TIME:]
-            plt.plot(Mat_Order[key][-SIM_TIME:], label=f"ORDER {key}")
-        plt.yticks(range(0, 21, 5))
-        plt.legend(bbox_to_anchor=(1, 0.5))
-        path = os.path.join(GRAPH_LOG, 'INVEN_LINE.png')
-        plt.savefig(path)
-        plt.show()
-        plt.close()
-
-        for day in range(SIM_TIME):
-            temp_dict = {}
-            for key, item in line_dict.items():
-                temp_dict[key] = item[day]
-            writer.add_scalars("Test_Line", temp_dict, global_step=day+1)

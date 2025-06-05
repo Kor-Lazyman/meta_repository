@@ -5,7 +5,17 @@ from config_SimPy import *
 # Using correction option
 USE_CORRECTION = False
 
-
+BUFFER_SIZE = 100000
+BATCH_SIZE = 20  
+LEARNING_RATE = 3e-4
+GAMMA = 0.99
+CLIP_EPSILON = 0.2
+UPDATE_STEPS = 10  
+GAE_LAMBDA = 0.95
+ENT_COEF = 0.0
+VF_COEF = 0.5
+MAX_GRAD_NORM = 0.5
+N_MULTIPROCESS = 5
 # def Create_scenario():
 #     if DEMAND_DIST_TYPE == "UNIFORM":
 #         # Uniform distribution
@@ -39,26 +49,11 @@ USE_CORRECTION = False
 
 #     return scenario
 
-
-def DEFINE_FOLDER(folder_name):
-    if os.path.exists(folder_name):
-        file_list = os.listdir(folder_name)
-        folder_name = os.path.join(folder_name, f"Train_{len(file_list)+1}")
-        os.makedirs(folder_name)
-    else:
-        folder_name = os.path.join(folder_name, "Train_1")
-        os.makedirs(folder_name)
-    return folder_name
-
-
-def save_path(path):
-    if os.path.exists(path):
-        shutil.rmtree(path)
-    # Create a new folder
-    os.makedirs(path)
-    return path
-
-
+# Define dir's path
+DRL_TENSORBOARD = False  # When True for DRL
+EXPERIMENT_MAML = True  # When True for EXPERIMENT_MAML
+EXPERIMENT_ADAPTATION = False  # When True for EXPERIMENT_ADAPTATION
+GRAPH_WRITER = True
 # Episode
 N_EPISODES = 3000  # Default: 5000
 
@@ -86,57 +81,13 @@ DAILY_REPORT_EXPORT = False
 STATE_TRAIN_EXPORT = False
 STATE_TEST_EXPORT = False
 
-# Define parent dir's path
-current_dir = os.path.dirname(__file__)
-parent_dir = os.path.dirname(current_dir)
-
-# Define dir's path
-DRL_TENSORBOARD = True  # When True for DRL
-EXPERIMENT_MAML = False  # When True for EXPERIMENT_MAML
-EXPERIMENT_ADAPTATION = False  # When True for EXPERIMENT_ADAPTATION
-
-if EXPERIMENT_MAML:
-    tensorboard_folder = os.path.join(
-        parent_dir, "Tensorboard_logs_Experiment_MAML")
-elif EXPERIMENT_ADAPTATION:
-    tensorboard_folder = os.path.join(
-        parent_dir, "Tensorboard_logs_Experiment_ADAPT")
-elif DRL_TENSORBOARD:
-    tensorboard_folder = os.path.join(
-        parent_dir, "Tensorboard_logs_Experiment_DRL")
-else:
-    tensorboard_folder = os.path.join(
-        parent_dir, "Tensorboard_logs_MAML")
-
-result_csv_folder = os.path.join(parent_dir, "result_CSV")
-STATE_folder = os.path.join(result_csv_folder, "state")
-daily_report_folder = os.path.join(result_csv_folder, "daily_report")
-graph_path = save_path(os.path.join(parent_dir, 'TEST_GRAPH'))
-
-# Define dir's path
-TENSORFLOW_LOGS = DEFINE_FOLDER(tensorboard_folder)
-
-STATE = save_path(STATE_folder)
-REPORT_LOGS = save_path(daily_report_folder)
-
-GRAPH_LOG = graph_path
-
-
 # Visualize_Graph
 VIZ_INVEN_LINE = False
 VIZ_INVEN_PIE = False
 VIZ_COST_PIE = False
 VIZ_COST_BOX = False
 
-# Saved Model
-SAVED_MODEL_PATH = os.path.join(parent_dir, "Saved_Model")
-SAVE_MODEL = False
-SAVED_MODEL_NAME = "DRL_PPO_AP1_E5000"
-# SAVED_MODEL_NAME = "MAML_PPO_AP3_E5_O1000"
 
-# Load Model
-LOAD_MODEL = False
-LOAD_MODEL_NAME = "MAML_PPO_AP3_E5_O1000"
 
 # Non-stationary demand
 mean_demand = 100

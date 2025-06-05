@@ -367,7 +367,7 @@ class Cost:
         """
         Update the cost log at the end of each day.
         """
-        COST_LOG.append(0)
+        cost = 0
         # Update holding cost
         for inven in inventoryList:
             DAILY_COST_REPORT['Holding cost'] += inven.unit_holding_cost * inven.on_hand_inventory * (
@@ -376,9 +376,9 @@ class Cost:
 
         # Update daily total cost
         for key in DAILY_COST_REPORT.keys():
-            COST_LOG[-1] += DAILY_COST_REPORT[key]
+            cost += DAILY_COST_REPORT[key]
 
-        return COST_LOG[-1]
+        return cost
 
     def clear_cost():
         """

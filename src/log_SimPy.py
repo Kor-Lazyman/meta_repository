@@ -3,8 +3,7 @@ DAILY_EVENTS = []
 # Log daily repots
 DAILY_REPORTS = []
 STATE_DICT = []
-COST_LOG = []
-DEMAND_LOG = []
+
 DAILY_COST_REPORT = {
     'Holding cost': 0,
     'Process cost': 0,

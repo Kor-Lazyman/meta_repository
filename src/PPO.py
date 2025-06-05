@@ -3,17 +3,10 @@ import torch.nn as nn
 import torch.optim as optim
 import numpy as np
 from torch.distributions import Categorical
-from config_RL import *
 import time
+from torch.optim.lr_scheduler import LambdaLR
+from config_RL import *
 
-BATCH_SIZE = 20  
-GAMMA = 0.99
-CLIP_EPSILON = 0.2
-UPDATE_STEPS = 5  
-GAE_LAMBDA = 0.95
-ENT_COEF = 0.0
-VF_COEF = 0.5
-MAX_GRAD_NORM = 0.5
 #DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 DEVICE = torch.device("cpu")
 class ActorCritic(nn.Module):
@@ -80,7 +73,7 @@ class PPOAgent:
         clip_epsilon: Clipping range for PPO.
         update_steps: Number of training epochs per update.
     """
-    def __init__(self, state_dim, action_dims, lr=3e-4, gamma=GAMMA, clip_epsilon=CLIP_EPSILON, update_steps=UPDATE_STEPS,
+    def __init__(self, state_dim, action_dims, total_time_steps, lr=3e-4, gamma=GAMMA, clip_epsilon=CLIP_EPSILON, update_steps=UPDATE_STEPS,
                 gae_lambda=GAE_LAMBDA, ent_coef=ENT_COEF, vf_coef=VF_COEF, max_grad_norm=MAX_GRAD_NORM):
         self.gamma = gamma
         self.clip_epsilon = clip_epsilon
@@ -90,9 +83,13 @@ class PPOAgent:
         self.vf_coef = vf_coef                
         self.max_grad_norm = max_grad_norm    
         self.device = DEVICE
+        self.total_time_steps = total_time_steps
     
         self.policy = ActorCritic(state_dim, action_dims).to(self.device)
         self.optimizer = optim.Adam(self.policy.parameters(), lr=lr)
+
+        lr_lambda = lambda step: 1 - min(step, total_time_steps) / (total_time_steps)
+        self.scheduler = LambdaLR(self.optimizer, lr_lambda=lr_lambda)
         self.memory = []
         
     def select_action(self, state):
@@ -203,14 +200,13 @@ class PPOAgent:
                 loss.backward(retain_graph=True)  
                 nn.utils.clip_grad_norm_(self.policy.parameters(), max_norm=0.5)
                 self.optimizer.step()
-                
                 self.learn_time=time.time()-start_time
-        
+        self.scheduler.step()
         self.clip_epsilon = max(0.1, self.clip_epsilon * 0.995)
-        temp_memory = self.memory.copy()
+        memory = self.memory.copy()
         self.memory.clear()
-        
-        return self.learn_time, temp_memory[-SIM_TIME:]
+
+        return self.learn_time, memory[-SIM_TIME:]
     
     def _compute_gae(self, rewards, values, gamma, lambda_):
         """

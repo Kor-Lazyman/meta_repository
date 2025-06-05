@@ -2,4 +2,3 @@
 STATE_ACTION_REPORT_CORRECTION = []  # Corrected State
 STATE_ACTION_REPORT_REAL = []  # Real State
 COST_HISTORY = []
-REWARD_LOG = []
